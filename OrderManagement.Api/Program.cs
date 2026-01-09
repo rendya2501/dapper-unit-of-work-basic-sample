@@ -1,3 +1,5 @@
+using FluentValidation;
+using OrderManagement.Api.Middleware;
 using OrderManagement.Application.Services;
 using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Infrastructure.Database;
@@ -27,6 +29,9 @@ builder.Services.AddScoped<Func<IUnitOfWork>>(sp =>
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 
+// FluentValidation
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -35,6 +40,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+// 横断的関心事：バリデーション例外処理
+app.UseMiddleware<ValidationExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
