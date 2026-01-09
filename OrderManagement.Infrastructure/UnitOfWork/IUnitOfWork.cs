@@ -1,6 +1,4 @@
-﻿using OrderManagement.Infrastructure.Repositories.AuditLog;
-using OrderManagement.Infrastructure.Repositories.Inventory;
-using OrderManagement.Infrastructure.Repositories.Order;
+﻿using OrderManagement.Infrastructure.Repositories.Abstractions;
 
 namespace OrderManagement.Infrastructure.UnitOfWork;
 
@@ -8,23 +6,55 @@ namespace OrderManagement.Infrastructure.UnitOfWork;
 /// Unit of Work パターンの中核インターフェース
 /// </summary>
 /// <remarks>
-/// - Connection/Transaction の生成・管理を担当
-/// - Repository の取得メソッドを提供
-/// - トランザクション境界を明確化
+/// <para><strong>読み取り専用操作とトランザクション</strong></para>
+/// <para>
+/// 読み取り専用の操作（SELECT）では BeginTransaction() を呼ばなくても使用可能。
+/// 更新操作（INSERT/UPDATE/DELETE）では必ず BeginTransaction() → Commit() を呼ぶ。
+/// </para>
+/// <code>
+/// // 読み取り専用
+/// using var uow = unitOfWorkFactory();
+/// var items = await uow.Inventory.GetAllAsync(); // OK
 /// 
-/// 設計ノート：
-/// - BeginTransaction は同期的（IDbConnection.BeginTransaction が同期API）
-/// - Commit/Rollback は async 化（将来的な非同期DB対応を考慮）
+/// // 更新操作
+/// using var uow = unitOfWorkFactory();
+/// uow.BeginTransaction();
+/// await uow.Inventory.CreateAsync(item);
+/// uow.Commit();
+/// </code>
 /// </remarks>
 public interface IUnitOfWork : IDisposable
 {
-    // トランザクション制御
+    /// <summary>
+    /// トランザクションを開始します
+    /// </summary>
+    /// <exception cref="InvalidOperationException">既にトランザクションが開始されている場合</exception>
     void BeginTransaction();
+
+    /// <summary>
+    /// トランザクションをコミットします
+    /// </summary>
+    /// <exception cref="InvalidOperationException">トランザクションが開始されていない場合</exception>
     void Commit();
+
+    /// <summary>
+    /// トランザクションをロールバックします
+    /// </summary>
+    /// <exception cref="InvalidOperationException">トランザクションが開始されていない場合</exception>
     void Rollback();
 
-    // Repository 取得（UoWが生成・管理する）
+    /// <summary>
+    /// 注文リポジトリを取得します
+    /// </summary>
     IOrderRepository Orders { get; }
+
+    /// <summary>
+    /// 在庫リポジトリを取得します
+    /// </summary>
     IInventoryRepository Inventory { get; }
+
+    /// <summary>
+    /// 監査ログリポジトリを取得します
+    /// </summary>
     IAuditLogRepository AuditLogs { get; }
 }

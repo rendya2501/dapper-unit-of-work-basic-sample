@@ -1,106 +1,108 @@
 ﻿using Microsoft.Data.Sqlite;
-using OrderManagement.Infrastructure.Repositories.AuditLog;
-using OrderManagement.Infrastructure.Repositories.Inventory;
-using OrderManagement.Infrastructure.Repositories.Order;
+using OrderManagement.Infrastructure.Repositories;
+using OrderManagement.Infrastructure.Repositories.Abstractions;
 using System.Data;
 
 namespace OrderManagement.Infrastructure.UnitOfWork;
 
 /// <summary>
 /// Unit of Work の実装クラス
-/// 設計ポイント：
-/// - Repository は外部から注入せず、内部で生成する
-/// - これにより Transaction の自動共有が保証される
-/// - Repository 側は Transaction を意識する必要がない
-/// - Commit/Rollback を async 化し、将来的な拡張性を確保
 /// </summary>
-
-public class UnitOfWork(string connectionString) : IUnitOfWork
+/// <remarks>
+/// <para><strong>設計原則</strong></para>
+/// <list type="number">
+/// <item>Repository は外部から注入せず、内部で生成する</item>
+/// <item>すべての Repository に同一の Transaction が自動的に共有される</item>
+/// <item>Connection は BeginTransaction 時に1度だけ確立される</item>
+/// </list>
+/// 
+/// <para><strong>遅延初期化 (Lazy Initialization) とは</strong></para>
+/// <para>
+/// Repository インスタンスは、getter で初めてアクセスされた時点で生成される。
+/// 使用されない Repository は生成されないため、メモリ効率が良い。
+/// </para>
+/// <code>
+/// // Orders にアクセスした時点で初めて OrderRepository が生成される
+/// var order = await uow.Orders.GetByIdAsync(1);
+/// 
+/// // Inventory を使わなければ InventoryRepository は生成されない
+/// </code>
+/// </remarks>
+public class UnitOfWork : IUnitOfWork
 {
-    private IDbConnection? _connection;
+    private readonly IDbConnection _connection;
     private IDbTransaction? _transaction;
     private bool _disposed;
 
-    // Repository インスタンス（遅延初期化）
-    private IOrderRepository? _orderRepository;
-    private IInventoryRepository? _inventoryRepository;
-    private IAuditLogRepository? _auditLogRepository;
 
-    // ------------------------------------------------------------------------
-    // Repository 取得（重要：ここで Transaction を自動注入）
-    // ------------------------------------------------------------------------
-
-    /// <summary>
-    /// OrderRepository 取得
-    /// 設計意図：getter内で生成することで、確実に同一Transaction を共有
-    /// </summary>
+    #region リポジトリ
+    /// <inheritdoc />
     public IOrderRepository Orders
     {
-        get
-        {
-            EnsureConnection();
-            return _orderRepository ??= new OrderRepository(_connection!, _transaction);
-        }
+        get => field ??= new OrderRepository(_connection, _transaction);
+        private set;
     }
 
+    /// <inheritdoc />
     public IInventoryRepository Inventory
     {
-        get
-        {
-            EnsureConnection();
-            return _inventoryRepository ??= new InventoryRepository(_connection!, _transaction);
-        }
+        get => field ??= new InventoryRepository(_connection, _transaction);
+        private set;
     }
 
+    /// <inheritdoc />
     public IAuditLogRepository AuditLogs
     {
-        get
-        {
-            EnsureConnection();
-            return _auditLogRepository ??= new AuditLogRepository(_connection!, _transaction);
-        }
+        get => field ??= new AuditLogRepository(_connection, _transaction);
+        private set;
     }
+    #endregion
 
 
-    // ------------------------------------------------------------------------
-    // トランザクション制御
-    // ------------------------------------------------------------------------
-
+    #region コンストラクタ
     /// <summary>
-    /// トランザクション開始
-    /// Connection が未作成の場合は自動的に生成する
-    /// 
-    /// 設計ノート：
-    /// IDbConnection.BeginTransaction() は同期APIのため、ここは同期的に実装
+    /// コンストラクタ（Connection を即座に生成・Open）
     /// </summary>
+    /// <remarks>
+    /// <para><strong>なぜコンストラクタで Connection を生成するのか</strong></para>
+    /// <list type="bullet">
+    /// <item>読み取り専用操作でも使えるようにするため</item>
+    /// <item>Repository getter で毎回 null チェックする必要がなくなる</item>
+    /// <item>コードがシンプルになる</item>
+    /// <item>接続プーリングにより、パフォーマンス問題は発生しない</item>
+    /// </list>
+    /// </remarks>
+    public UnitOfWork(string connectionString)
+    {
+        ArgumentNullException.ThrowIfNull(connectionString);
+
+        _connection = new SqliteConnection(connectionString);
+        _connection.Open();
+    }
+    #endregion
+
+
+    #region トランザクション制御
+    /// <inheritdoc />
     public void BeginTransaction()
     {
         if (_transaction != null)
-        {
             throw new InvalidOperationException("Transaction is already started.");
-        }
 
-        EnsureConnection();
-        _transaction = _connection!.BeginTransaction();
+        _transaction = _connection.BeginTransaction();
+
+        // 既存の Repository インスタンスを破棄（新しい Transaction を使わせるため）
+        ResetRepositories();
     }
 
-    /// <summary>
-    /// トランザクションコミット（非同期版）
-    /// 
-    /// 設計ノート：
-    /// 現在の IDbTransaction.Commit() は同期APIだが、
-    /// 将来的に非同期DB操作やロギング処理を追加する可能性を考慮し async 化
-    /// </summary>
+    /// <inheritdoc />
     public void Commit()
     {
         if (_transaction == null)
-        {
             throw new InvalidOperationException("Transaction is not started.");
-        }
 
         try
         {
-            // 現状は同期的だが、将来の拡張性のため async メソッドとして定義
             _transaction.Commit();
         }
         finally
@@ -110,15 +112,11 @@ public class UnitOfWork(string connectionString) : IUnitOfWork
         }
     }
 
-    /// <summary>
-    /// トランザクションロールバック（非同期版）
-    /// </summary>
-    public  void Rollback( )
+    /// <inheritdoc />
+    public void Rollback()
     {
         if (_transaction == null)
-        {
             throw new InvalidOperationException("Transaction is not started.");
-        }
 
         try
         {
@@ -130,31 +128,51 @@ public class UnitOfWork(string connectionString) : IUnitOfWork
             _transaction = null;
         }
     }
+    #endregion
 
 
-    // ------------------------------------------------------------------------
-    // 内部ヘルパー
-    // ------------------------------------------------------------------------
-
-    private void EnsureConnection()
+    #region ヘルパー
+    /// <summary>
+    /// すべての Repository をリセットします
+    /// </summary>
+    /// <remarks>
+    /// <para><strong>なぜリセットが必要か</strong></para>
+    /// <para>
+    /// BeginTransaction() を呼ぶと新しい Transaction が生成されるが、
+    /// 既存の Repository インスタンスは古い Transaction を保持している。
+    /// リセットすることで、次回アクセス時に新しい Transaction が注入される。
+    /// </para>
+    /// 
+    /// <para><strong>ベストプラクティス：メソッド化</strong></para>
+    /// <para>
+    /// Repository を追加する際、BeginTransaction() を修正する必要がなくなる。
+    /// メンテナンス性が向上する。
+    /// </para>
+    /// </remarks>
+    private void ResetRepositories()
     {
-        if (_connection == null)
-        {
-            _connection = new SqliteConnection(connectionString);
-            _connection.Open();
-        }
+        Orders = null!;
+        Inventory = null!;
+        AuditLogs = null!;
+
+        // Repository を追加する場合は、ここに追加するだけでOK
+        // 例: Products = null!;
     }
+    #endregion
 
-    // ------------------------------------------------------------------------
-    // Dispose パターン（同期・非同期両対応）
-    // ------------------------------------------------------------------------
 
+    #region Dispose パターン
+    /// <inheritdoc />
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// リソースを解放します
+    /// </summary>
+    /// <param name="disposing">マネージドリソースを解放する場合は true</param>
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed) return;
@@ -167,4 +185,5 @@ public class UnitOfWork(string connectionString) : IUnitOfWork
 
         _disposed = true;
     }
+    #endregion
 }

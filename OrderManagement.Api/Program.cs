@@ -1,4 +1,5 @@
 using OrderManagement.Application.Services;
+using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Infrastructure.Database;
 using OrderManagement.Infrastructure.UnitOfWork;
 using Scalar.AspNetCore;
@@ -9,19 +10,22 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-// DB初期化
-DatabaseInitializer.InitializeDatabase(connectionString);
+// ===== データベース初期化 =====
+DatabaseInitializer.Initialize(connectionString);
 
 // DI登録
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+// UnitOfWork Factory
 // UnitOfWork は毎回新しいインスタンスを生成
 // 接続文字列をクロージャでキャプチャ
 builder.Services.AddScoped<Func<IUnitOfWork>>(sp =>
     () => new UnitOfWork(connectionString));
 
+// Services
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
 
 var app = builder.Build();
 
