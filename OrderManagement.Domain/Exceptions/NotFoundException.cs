@@ -29,7 +29,7 @@ public class NotFoundException : Exception
     {
     }
 
-    public NotFoundException(string resourceName, object key)
+    public NotFoundException(string resourceName, string key)
         : base($"{resourceName} with key '{key}' was not found.")
     {
     }

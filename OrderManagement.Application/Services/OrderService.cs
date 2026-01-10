@@ -44,7 +44,7 @@ public class OrderService(Func<IUnitOfWork> unitOfWorkFactory) : IOrderService
             foreach (var item in items)
             {
                 var inventory = await uow.Inventory.GetByProductIdAsync(item.ProductId)
-                    ?? throw new NotFoundException("Product", item.ProductId);
+                    ?? throw new NotFoundException("Product", item.ProductId.ToString());
 
                 if (inventory.Stock < item.Quantity)
                 {
@@ -98,6 +98,6 @@ public class OrderService(Func<IUnitOfWork> unitOfWorkFactory) : IOrderService
 
         var order = await uow.Orders.GetByIdAsync(id);
 
-        return order ?? throw new NotFoundException("Order", id);
+        return order ?? throw new NotFoundException("Order", id.ToString());
     }
 }

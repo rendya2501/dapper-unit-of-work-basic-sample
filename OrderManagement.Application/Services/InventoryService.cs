@@ -1,5 +1,6 @@
 ﻿using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Domain.Entities;
+using OrderManagement.Domain.Exceptions;
 using OrderManagement.Infrastructure.UnitOfWork;
 
 namespace OrderManagement.Application.Services;
@@ -67,7 +68,7 @@ public class InventoryService(Func<IUnitOfWork> unitOfWorkFactory) : IInventoryS
         try
         {
             var existing = await uow.Inventory.GetByProductIdAsync(productId)
-                ?? throw new InvalidOperationException($"Product {productId} not found.");
+                ?? throw new NotFoundException("Product", productId.ToString());
 
             await uow.Inventory.UpdateAsync(productId, productName, stock, unitPrice);
 
