@@ -18,8 +18,8 @@ namespace OrderManagement.Application.Services;
 /// <item>監査ログの記録</item>
 /// </list>
 /// </remarks>
-/// <param name="unitOfWorkFactory">UnitOfWork ファクトリ</param>
-public class OrderService(Func<IUnitOfWork> unitOfWorkFactory) : IOrderService
+/// <param name="uow">Unit of Work（DI経由で注入）</param>
+public class OrderService(IUnitOfWork uow) : IOrderService
 {
     /// <inheritdoc />
     public async Task<int> CreateOrderAsync(int customerId, List<OrderItem> items)
@@ -27,8 +27,7 @@ public class OrderService(Func<IUnitOfWork> unitOfWorkFactory) : IOrderService
         if (items.Count == 0)
             throw new BusinessRuleViolationException("Order must have at least one item.");
 
-        // ===== トランザクション境界開始 =====
-        using var uow = unitOfWorkFactory();
+        // トランザクション開始
         uow.BeginTransaction();
 
         try
@@ -87,15 +86,12 @@ public class OrderService(Func<IUnitOfWork> unitOfWorkFactory) : IOrderService
     /// <inheritdoc />
     public async Task<IEnumerable<Order>> GetAllOrdersAsync()
     {
-        using var uow = unitOfWorkFactory();
         return await uow.Orders.GetAllAsync();
     }
 
     /// <inheritdoc />
     public async Task<Order?> GetOrderByIdAsync(int id)
     {
-        using var uow = unitOfWorkFactory();
-
         var order = await uow.Orders.GetByIdAsync(id);
 
         return order ?? throw new NotFoundException("Order", id.ToString());

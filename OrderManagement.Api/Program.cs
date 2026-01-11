@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Data.Sqlite;
 using OrderManagement.Api.Filters;
 using OrderManagement.Api.Middleware;
 using OrderManagement.Application.Services;
@@ -6,6 +7,7 @@ using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Infrastructure.Database;
 using OrderManagement.Infrastructure.UnitOfWork;
 using Scalar.AspNetCore;
+using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,9 +31,19 @@ builder.Services.AddOpenApi();
 // FluentValidationÅiValidator ÇÃÇ›ìoò^Åj
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// UnitOfWork Factory
-builder.Services.AddScoped<Func<IUnitOfWork>>(sp =>
-    () => new UnitOfWork(connectionString));
+// Database
+builder.Services.AddScoped<IDbConnection>(sp =>
+{
+    var connectionString =
+        builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string not found.");
+
+    var conn = new SqliteConnection(connectionString);
+    conn.Open();
+    return conn;
+});
+// unit of work
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Services
 builder.Services.AddScoped<IOrderService, OrderService>();

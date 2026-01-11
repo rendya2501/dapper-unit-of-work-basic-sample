@@ -1,5 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
-using OrderManagement.Infrastructure.Repositories;
+﻿using OrderManagement.Infrastructure.Repositories;
 using OrderManagement.Infrastructure.Repositories.Abstractions;
 using System.Data;
 
@@ -28,9 +27,20 @@ namespace OrderManagement.Infrastructure.UnitOfWork;
 /// // Inventory を使わなければ InventoryRepository は生成されない
 /// </code>
 /// </remarks>
-public class UnitOfWork : IUnitOfWork
+/// <remarks>
+/// コンストラクタ（Connection を即座に生成・Open）
+/// </remarks>
+/// <remarks>
+/// <para><strong>なぜコンストラクタで Connection を生成するのか</strong></para>
+/// <list type="bullet">
+/// <item>読み取り専用操作でも使えるようにするため</item>
+/// <item>Repository getter で毎回 null チェックする必要がなくなる</item>
+/// <item>コードがシンプルになる</item>
+/// <item>接続プーリングにより、パフォーマンス問題は発生しない</item>
+/// </list>
+/// </remarks>
+public class UnitOfWork(IDbConnection connection) : IUnitOfWork
 {
-    private readonly IDbConnection _connection;
     private IDbTransaction? _transaction;
     private bool _disposed;
 
@@ -39,46 +49,24 @@ public class UnitOfWork : IUnitOfWork
     /// <inheritdoc />
     public IOrderRepository Orders
     {
-        get => field ??= new OrderRepository(_connection, _transaction);
+        get => field ??= new OrderRepository(connection, _transaction);
         private set;
     }
 
     /// <inheritdoc />
     public IInventoryRepository Inventory
     {
-        get => field ??= new InventoryRepository(_connection, _transaction);
+        get => field ??= new InventoryRepository(connection, _transaction);
         private set;
     }
 
     /// <inheritdoc />
     public IAuditLogRepository AuditLogs
     {
-        get => field ??= new AuditLogRepository(_connection, _transaction);
+        get => field ??= new AuditLogRepository(connection, _transaction);
         private set;
     }
-    #endregion
 
-
-    #region コンストラクタ
-    /// <summary>
-    /// コンストラクタ（Connection を即座に生成・Open）
-    /// </summary>
-    /// <remarks>
-    /// <para><strong>なぜコンストラクタで Connection を生成するのか</strong></para>
-    /// <list type="bullet">
-    /// <item>読み取り専用操作でも使えるようにするため</item>
-    /// <item>Repository getter で毎回 null チェックする必要がなくなる</item>
-    /// <item>コードがシンプルになる</item>
-    /// <item>接続プーリングにより、パフォーマンス問題は発生しない</item>
-    /// </list>
-    /// </remarks>
-    public UnitOfWork(string connectionString)
-    {
-        ArgumentNullException.ThrowIfNull(connectionString);
-
-        _connection = new SqliteConnection(connectionString);
-        _connection.Open();
-    }
     #endregion
 
 
@@ -89,7 +77,7 @@ public class UnitOfWork : IUnitOfWork
         if (_transaction != null)
             throw new InvalidOperationException("Transaction is already started.");
 
-        _transaction = _connection.BeginTransaction();
+        _transaction = connection.BeginTransaction();
 
         // 既存の Repository インスタンスを破棄（新しい Transaction を使わせるため）
         ResetRepositories();
@@ -173,8 +161,8 @@ public class UnitOfWork : IUnitOfWork
 
         if (disposing)
         {
+            // Transaction のみ Dispose（Connection は DI が管理）
             _transaction?.Dispose();
-            _connection?.Dispose();
         }
 
         _disposed = true;

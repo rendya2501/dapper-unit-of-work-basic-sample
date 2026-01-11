@@ -11,26 +11,23 @@ namespace OrderManagement.Application.Services;
 /// <remarks>
 /// 在庫管理のビジネスロジックを実装します。
 /// </remarks>
-public class InventoryService(Func<IUnitOfWork> unitOfWorkFactory) : IInventoryService
+public class InventoryService(IUnitOfWork uow) : IInventoryService
 {
     /// <inheritdoc />
     public async Task<IEnumerable<Inventory>> GetAllAsync()
     {
-        using var uow = unitOfWorkFactory();
         return await uow.Inventory.GetAllAsync();
     }
 
     /// <inheritdoc />
     public async Task<Inventory?> GetByProductIdAsync(int productId)
     {
-        using var uow = unitOfWorkFactory();
         return await uow.Inventory.GetByProductIdAsync(productId);
     }
 
     /// <inheritdoc />
     public async Task<int> CreateAsync(string productName, int stock, decimal unitPrice)
     {
-        using var uow = unitOfWorkFactory();
         uow.BeginTransaction();
 
         try
@@ -62,7 +59,6 @@ public class InventoryService(Func<IUnitOfWork> unitOfWorkFactory) : IInventoryS
     /// <inheritdoc />
     public async Task UpdateAsync(int productId, string productName, int stock, decimal unitPrice)
     {
-        using var uow = unitOfWorkFactory();
         uow.BeginTransaction();
 
         try
@@ -91,7 +87,6 @@ public class InventoryService(Func<IUnitOfWork> unitOfWorkFactory) : IInventoryS
     /// <inheritdoc />
     public async Task DeleteAsync(int productId)
     {
-        using var uow = unitOfWorkFactory();
         uow.BeginTransaction();
 
         try
