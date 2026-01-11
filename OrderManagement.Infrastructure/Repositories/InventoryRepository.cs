@@ -25,6 +25,7 @@ public class InventoryRepository(IDbConnection connection, IDbTransaction? trans
     public async Task<Inventory?> GetByProductIdAsync(int productId)
     {
         const string sql = "SELECT * FROM Inventory WHERE ProductId = @ProductId";
+
         return await connection.QueryFirstOrDefaultAsync<Inventory>(
             sql, new { ProductId = productId }, transaction);
     }
@@ -33,6 +34,7 @@ public class InventoryRepository(IDbConnection connection, IDbTransaction? trans
     public async Task<IEnumerable<Inventory>> GetAllAsync()
     {
         const string sql = "SELECT * FROM Inventory ORDER BY ProductId";
+
         return await connection.QueryAsync<Inventory>(sql, transaction: transaction);
     }
 
@@ -55,6 +57,7 @@ public class InventoryRepository(IDbConnection connection, IDbTransaction? trans
             SET ProductName = @ProductName, Stock = @Stock, UnitPrice = @UnitPrice
             WHERE ProductId = @ProductId
             """;
+
         await connection.ExecuteAsync(sql,
             new { ProductId = productId, ProductName = productName, Stock = stock, UnitPrice = unitPrice },
             transaction);
@@ -64,6 +67,7 @@ public class InventoryRepository(IDbConnection connection, IDbTransaction? trans
     public async Task<int> UpdateStockAsync(int productId, int newStock)
     {
         const string sql = "UPDATE Inventory SET Stock = @Stock WHERE ProductId = @ProductId";
+
         return await connection.ExecuteAsync(
             sql, new { ProductId = productId, Stock = newStock }, transaction);
     }
@@ -72,6 +76,7 @@ public class InventoryRepository(IDbConnection connection, IDbTransaction? trans
     public async Task DeleteAsync(int productId)
     {
         const string sql = "DELETE FROM Inventory WHERE ProductId = @ProductId";
+
         await connection.ExecuteAsync(sql, new { ProductId = productId }, transaction);
     }
 }
