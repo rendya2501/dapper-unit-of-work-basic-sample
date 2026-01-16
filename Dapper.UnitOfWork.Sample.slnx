@@ -1,7 +1,6 @@
 <Solution>
-  <Project Path="OrderManagement.Api/OrderManagement.Api.csproj" />
-  <Project Path="OrderManagement.Application/OrderManagement.Application.csproj" />
-  <Project Path="OrderManagement.Domain/OrderManagement.Domain.csproj" />
-  <Project Path="OrderManagement.Infrastructure/OrderManagement.Infrastructure.csproj" />
-  <Project Path="Tests/OrderManagement.Tests.csproj" Id="32468aa0-051e-48c6-8a49-1b4876b93b9e" />
+  <Project Path="src/OrderManagement.Api/OrderManagement.Api.csproj" />
+  <Project Path="src/OrderManagement.Application/OrderManagement.Application.csproj" />
+  <Project Path="src/OrderManagement.Domain/OrderManagement.Domain.csproj" />
+  <Project Path="src/OrderManagement.Infrastructure/OrderManagement.Infrastructure.csproj" />
 </Solution>
