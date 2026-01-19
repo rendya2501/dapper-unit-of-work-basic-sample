@@ -27,7 +27,7 @@ public class OrderService(IUnitOfWork uow) : IOrderService
         return await uow.CommandAsync(async ctx =>
         {
             if (items.Count == 0)
-                throw new BusinessRuleViolationException("Order must have at least one item.");
+                throw new BusinessRuleValidationException("Order must have at least one item.");
 
             // 1. 注文集約を構築
             var order = new Order

@@ -127,7 +127,7 @@ public class ProblemDetailsMiddleware(
             ),
 
             // ビジネスルール違反
-            BusinessRuleViolationException businessEx => (
+            BusinessRuleValidationException businessEx => (
                 StatusCodes.Status400BadRequest,
                 "Business Rule Violation",
                 businessEx.Message,
