@@ -2,7 +2,7 @@
 using OrderManagement.Application.Repositories;
 using OrderManagement.Infrastructure.Repositories;
 
-namespace OrderManagement.Infrastructure.UnitOfWork.UnionType;
+namespace OrderManagement.Infrastructure.Persistence.UnitOfWork.ActionScope;
 
 /// <summary>
 /// Unit of Work コンテキストの実装

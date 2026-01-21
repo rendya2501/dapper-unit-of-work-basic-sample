@@ -2,7 +2,7 @@
 using Microsoft.Data.Sqlite;
 using System.Data;
 
-namespace OrderManagement.Infrastructure.Database;
+namespace OrderManagement.Infrastructure.Persistence.Database;
 
 /// <summary>
 /// データベース初期化クラス

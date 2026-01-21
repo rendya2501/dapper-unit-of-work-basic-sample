@@ -4,7 +4,7 @@ using OrderManagement.Application.Repositories;
 using OrderManagement.Domain.Entities;
 using System.Data;
 
-namespace OrderManagement.Infrastructure.Repositories;
+namespace OrderManagement.Infrastructure.Persistence.Repositories;
 
 /// <summary>
 /// 注文リポジトリの実装

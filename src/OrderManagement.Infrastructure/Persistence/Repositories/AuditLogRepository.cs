@@ -3,7 +3,7 @@ using OrderManagement.Application.Common;
 using OrderManagement.Application.Repositories;
 using OrderManagement.Domain.Entities;
 
-namespace OrderManagement.Infrastructure.Repositories;
+namespace OrderManagement.Infrastructure.Persistence.Repositories;
 
 /// <summary>
 /// 監査ログリポジトリの実装

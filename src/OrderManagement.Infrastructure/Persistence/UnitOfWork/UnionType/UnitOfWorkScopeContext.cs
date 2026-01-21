@@ -1,4 +1,4 @@
-﻿namespace OrderManagement.Infrastructure.UnitOfWork.UnionType;
+﻿namespace OrderManagement.Infrastructure.Persistence.UnitOfWork.UnionType;
 
 
 /// <summary>

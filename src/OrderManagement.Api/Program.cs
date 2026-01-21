@@ -6,10 +6,10 @@ using OrderManagement.Application.Common;
 using OrderManagement.Application.Repositories;
 using OrderManagement.Application.Services;
 using OrderManagement.Application.Services.Abstractions;
-using OrderManagement.Infrastructure;
-using OrderManagement.Infrastructure.Database;
-using OrderManagement.Infrastructure.Repositories;
-using OrderManagement.Infrastructure.UnitOfWork.Basic;
+using OrderManagement.Infrastructure.Persistence;
+using OrderManagement.Infrastructure.Persistence.Database;
+using OrderManagement.Infrastructure.Persistence.Repositories;
+using OrderManagement.Infrastructure.Persistence.UnitOfWork.Basic;
 using Scalar.AspNetCore;
 using System.Data;
 

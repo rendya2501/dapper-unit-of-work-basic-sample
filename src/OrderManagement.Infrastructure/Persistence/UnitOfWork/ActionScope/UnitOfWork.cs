@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using OrderManagement.Application.Common;
 
-namespace OrderManagement.Infrastructure.UnitOfWork.UnionType;
+namespace OrderManagement.Infrastructure.Persistence.UnitOfWork.ActionScope;
 
 /// <summary>
 /// Unit of Work の実装クラス（Action Scope パターン）
@@ -14,8 +14,7 @@ namespace OrderManagement.Infrastructure.UnitOfWork.UnionType;
 public class UnitOfWork(IDbSessionAccessor accessor, ILogger<UnitOfWork>? logger = null) : IUnitOfWork
 {
     /// <inheritdoc />
-    public async Task<T> CommandAsync<T>(
-        Func<IUnitOfWorkContext, Task<UnitOfWorkResult<T>>> command)
+    public async Task<T> CommandAsync<T>(Func<IUnitOfWorkContext, Task<T>> command)
     {
         // 二重スコープ検知
         if (UnitOfWorkScopeContext.Current.Value != null)
@@ -37,22 +36,10 @@ public class UnitOfWork(IDbSessionAccessor accessor, ILogger<UnitOfWork>? logger
             var context = new UnitOfWorkContext(accessor);
             var result = await command(context);
 
-            // ★ 結果型によってCommit/Rollbackを判定
-            return result.Match(
-                onSuccess: value =>
-                {
-                    tx.Commit();
-                    logger?.LogInformation("Command succeeded - Transaction committed");
-                    return value;
-                },
-                onAbort: reason =>
-                {
-                    tx.Rollback();
-                    logger?.LogWarning("Command aborted: {Reason} - Transaction rolled back", reason);
-                    throw new OperationCanceledException($"Operation aborted: {reason}");
-                }
-            );
+            tx.Commit();
+            logger?.LogInformation("Command completed successfully (Transaction committed)");
 
+            return result;
         }
         catch (Exception ex)
         {
@@ -73,8 +60,7 @@ public class UnitOfWork(IDbSessionAccessor accessor, ILogger<UnitOfWork>? logger
         await CommandAsync<object?>(async ctx =>
         {
             await command(ctx);
-            // return null;
-            return UnitOfWorkResult<object?>.Ok(null);
+            return null;
         });
     }
 

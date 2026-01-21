@@ -1,4 +1,4 @@
-﻿namespace OrderManagement.Infrastructure.UnitOfWork.UnionType;
+﻿namespace OrderManagement.Infrastructure.Persistence.UnitOfWork.UnionType;
 
 /// <summary>
 /// Unit of Work インターフェース（Action Scope パターン - CQRS 命名版）

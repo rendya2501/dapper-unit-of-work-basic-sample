@@ -1,4 +1,4 @@
-﻿namespace OrderManagement.Infrastructure.UnitOfWork.UnionType;
+﻿namespace OrderManagement.Infrastructure.Persistence.UnitOfWork.UnionType;
 
 /// <summary>
 /// Unit of Work 実行結果を表すユニオン型

@@ -1,4 +1,4 @@
-﻿namespace OrderManagement.Infrastructure.UnitOfWork.ActionScope;
+﻿namespace OrderManagement.Infrastructure.Persistence.UnitOfWork.ActionScope;
 
 
 /// <summary>
