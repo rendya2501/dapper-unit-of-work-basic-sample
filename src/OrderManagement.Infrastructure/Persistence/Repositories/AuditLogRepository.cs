@@ -8,7 +8,7 @@ namespace OrderManagement.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// 監査ログリポジトリの実装
 /// </summary>
-public class AuditLogRepository(IDbSessionAccessor session)
+public class AuditLogRepository(IDbSession session)
     : IAuditLogRepository
 {
     /// <inheritdoc />

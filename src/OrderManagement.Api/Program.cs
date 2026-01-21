@@ -11,7 +11,6 @@ using OrderManagement.Infrastructure.Persistence.Database;
 using OrderManagement.Infrastructure.Persistence.Repositories;
 using OrderManagement.Infrastructure.Persistence.UnitOfWork.Basic;
 using Scalar.AspNetCore;
-using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,20 +34,38 @@ builder.Services.AddOpenApi();
 // FluentValidation（Validator のみ登録）
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// Database
-builder.Services.AddScoped<IDbConnection>(sp =>
-{
-    var connectionString =
-        builder.Configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("Connection string not found.");
+// ===== Database Session =====
+//builder.Services.AddScoped<IDbConnection>(sp =>
+//{
+//    var connectionString =
+//        builder.Configuration.GetConnectionString("DefaultConnection")
+//            ?? throw new InvalidOperationException("Connection string not found.");
 
-    var conn = new SqliteConnection(connectionString);
-    conn.Open();
-    return conn;
+//    return new SqliteConnection(connectionString);
+//});
+//builder.Services.AddScoped<DbSessionAccessor>(sp =>
+//{
+//    var connection = sp.GetRequiredService<IDbConnection>();
+//    return new DbSessionAccessor(connection);
+//});
+
+// DbSessionAccessor が Connection の所有権を持つ
+builder.Services.AddScoped<DbSession>(sp =>
+{
+    var connStr = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Connection string not found.");
+
+    // Connection を作成して DbSessionAccessor に渡す
+    // DbSessionAccessor が Dispose 時に Connection も破棄する
+    var connection = new SqliteConnection(connStr);
+    return new DbSession(connection);
 });
 
-// unit of work
-builder.Services.AddScoped<IDbSessionAccessor, DbSessionAccessor>();
+// IDbSessionManager (UnitOfWork用)
+builder.Services.AddScoped<IDbSessionManager>(sp => sp.GetRequiredService<DbSession>());
+// IDbSession (リポジトリ用)
+builder.Services.AddScoped<IDbSession>(sp => sp.GetRequiredService<DbSession>());
+// UnitOfWork
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Repositories

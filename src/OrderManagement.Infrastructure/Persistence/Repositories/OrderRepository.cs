@@ -23,7 +23,7 @@ namespace OrderManagement.Infrastructure.Persistence.Repositories;
 /// Order と OrderDetail の整合性が保証される。
 /// </para>
 /// </remarks>
-public class OrderRepository(IDbSessionAccessor session)
+public class OrderRepository(IDbSession session)
     : IOrderRepository
 {
     /// <inheritdoc />

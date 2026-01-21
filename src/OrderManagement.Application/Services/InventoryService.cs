@@ -34,7 +34,7 @@ public class InventoryService(
     {
         try
         {
-            uow.BeginTransaction();
+            await uow.BeginTransactionAsync();
 
             var productId = await inventory.CreateAsync(new Inventory
             {
@@ -50,13 +50,13 @@ public class InventoryService(
                 CreatedAt = DateTime.UtcNow
             });
 
-            uow.Commit();
+            await uow.CommitAsync();
 
             return productId;
         }
         catch
         {
-            uow.Rollback();
+            await uow.RollbackAsync();
             throw;
         }
     }
@@ -66,7 +66,7 @@ public class InventoryService(
     {
         try
         {
-            uow.BeginTransaction();
+            await uow.BeginTransactionAsync();
 
             _ = await inventory.GetByProductIdAsync(productId) // Ensure product exists before updating
                  ?? throw new NotFoundException("Product", productId.ToString());
@@ -80,11 +80,11 @@ public class InventoryService(
                 CreatedAt = DateTime.UtcNow
             });
 
-            uow.Commit();
+            await uow.CommitAsync();
         }
         catch
         {
-            uow.Rollback();
+            await uow.RollbackAsync();
             throw;
         }
     }
@@ -94,7 +94,7 @@ public class InventoryService(
     {
         try
         {
-            uow.BeginTransaction();
+            await uow.BeginTransactionAsync();
 
             var existing = await inventory.GetByProductIdAsync(productId)
                 ?? throw new NotFoundException("Product", productId.ToString());
@@ -108,11 +108,11 @@ public class InventoryService(
                 CreatedAt = DateTime.UtcNow
             });
 
-            uow.Commit();
+            await uow.CommitAsync();
         }
         catch
         {
-            uow.Rollback();
+            await uow.RollbackAsync();
             throw;
         }
     }

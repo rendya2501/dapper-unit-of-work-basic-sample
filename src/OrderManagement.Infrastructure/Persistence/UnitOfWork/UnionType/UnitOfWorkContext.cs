@@ -1,13 +1,13 @@
 ﻿using OrderManagement.Application.Common;
 using OrderManagement.Application.Repositories;
-using OrderManagement.Infrastructure.Repositories;
+using OrderManagement.Infrastructure.Persistence.Repositories;
 
 namespace OrderManagement.Infrastructure.Persistence.UnitOfWork.UnionType;
 
 /// <summary>
 /// Unit of Work コンテキストの実装
 /// </summary>
-internal class UnitOfWorkContext(IDbSessionAccessor accessor) : IUnitOfWorkContext
+internal class UnitOfWorkContext(IDbSession accessor) : IUnitOfWorkContext
 {
     /// <inheritdoc />
     public IOrderRepository Orders

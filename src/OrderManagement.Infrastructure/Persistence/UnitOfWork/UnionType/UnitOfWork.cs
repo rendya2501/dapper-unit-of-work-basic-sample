@@ -11,7 +11,7 @@ namespace OrderManagement.Infrastructure.Persistence.UnitOfWork.UnionType;
 /// </remarks>
 /// <param name="connection">データベース接続</param>
 /// <param name="logger">ロガー（オプショナル）</param>
-public class UnitOfWork(IDbSessionAccessor accessor, ILogger<UnitOfWork>? logger = null) : IUnitOfWork
+public class UnitOfWork(IDbSession accessor, ILogger<UnitOfWork>? logger = null) : IUnitOfWork
 {
     /// <inheritdoc />
     public async Task<T> CommandAsync<T>(

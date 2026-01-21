@@ -18,7 +18,7 @@ namespace OrderManagement.Infrastructure.Persistence.Repositories;
 /// </remarks>
 /// <param name="session.Connection">データベース接続</param>
 /// <param name="session.Transaction">トランザクション（UnitOfWork から注入）</param>
-public class InventoryRepository(IDbSessionAccessor session)
+public class InventoryRepository(IDbSession session)
     : IInventoryRepository
 {
     /// <inheritdoc />

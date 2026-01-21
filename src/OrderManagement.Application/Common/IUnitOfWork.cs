@@ -1,47 +1,48 @@
-﻿using OrderManagement.Application.Repositories;
-
-namespace OrderManagement.Application.Common;
+﻿namespace OrderManagement.Application.Common;
 
 /// <summary>
 /// Unit of Work パターンの中核インターフェース
 /// </summary>
-/// <remarks>
-/// <para><strong>読み取り専用操作とトランザクション</strong></para>
-/// <para>
-/// 読み取り専用の操作（SELECT）では BeginTransaction() を呼ばなくても使用可能。
-/// 更新操作（INSERT/UPDATE/DELETE）では必ず BeginTransaction() → Commit() を呼ぶ。
-/// </para>
-/// <code>
-/// // 読み取り専用
-/// using var uow = unitOfWorkFactory();
-/// var items = await uow.Inventory.GetAllAsync(); // OK
-/// 
-/// // 更新操作
-/// using var uow = unitOfWorkFactory();
-/// uow.BeginTransaction();
-/// await uow.Inventory.CreateAsync(item);
-/// uow.Commit();
-/// </code>
-/// </remarks>
-public interface IUnitOfWork : IDisposable
+public interface IUnitOfWork : IAsyncDisposable, IDisposable
 {
-    #region トランザクション
     /// <summary>
-    /// トランザクションを開始します
+    /// 同期的に新しいトランザクションを開始します。
     /// </summary>
-    /// <exception cref="InvalidOperationException">既にトランザクションが開始されている場合</exception>
+    /// <exception cref="InvalidOperationException">既にトランザクションが開始されている場合にスローされます。</exception>
     void BeginTransaction();
 
     /// <summary>
-    /// トランザクションをコミットします
+    /// 現在のトランザクションでの変更を確定します。
     /// </summary>
-    /// <exception cref="InvalidOperationException">トランザクションが開始されていない場合</exception>
+    /// <exception cref="InvalidOperationException">トランザクションが開始されていない場合にスローされます。</exception>
     void Commit();
 
     /// <summary>
-    /// トランザクションをロールバックします
+    /// 現在のトランザクションでの変更を取り消します。
     /// </summary>
-    /// <exception cref="InvalidOperationException">トランザクションが開始されていない場合</exception>
+    /// <exception cref="InvalidOperationException">トランザクションが開始されていない場合にスローされます。</exception>
     void Rollback();
-    #endregion
+
+    /// <summary>
+    /// 非同期的に新しいトランザクションを開始します。
+    /// </summary>
+    /// <param name="ct">キャンセル通知を受け取るためのトークン。</param>
+    /// <returns>非同期操作を表すタスク。</returns>
+    /// <exception cref="InvalidOperationException">既にトランザクションが開始されている場合にスローされます。</exception>
+    Task BeginTransactionAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// 非同期的に現在のトランザクションでの変更を確定します。
+    /// </summary>
+    /// <param name="ct">キャンセル通知を受け取るためのトークン。</param>
+    /// <returns>非同期操作を表すタスク。</returns>
+    /// <exception cref="InvalidOperationException">トランザクションが開始されていない場合にスローされます。</exception>
+    Task CommitAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// 非同期的に現在のトランザクションでの変更を取り消します。
+    /// </summary>
+    /// <param name="ct">キャンセル通知を受け取るためのトークン。</param>
+    /// <returns>非同期操作を表すタスク。</returns>
+    Task RollbackAsync(CancellationToken ct = default);
 }

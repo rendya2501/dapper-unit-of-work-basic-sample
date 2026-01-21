@@ -31,7 +31,7 @@ public class OrderService(
     {
         try
         {
-            uow.BeginTransaction();
+            await uow.BeginTransactionAsync();
 
             if (items.Count == 0)
                 throw new BusinessRuleValidationException("Order must have at least one item.");
@@ -77,13 +77,13 @@ public class OrderService(
                 CreatedAt = DateTime.UtcNow
             });
 
-            uow.Commit();
+            await uow.CommitAsync();
 
             return orderId;
         }
         catch
         {
-            uow.Rollback();
+            await uow.RollbackAsync();
             throw;
         }
     }
