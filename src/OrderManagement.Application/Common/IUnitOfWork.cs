@@ -1,6 +1,6 @@
-﻿using OrderManagement.Infrastructure.Repositories.Abstractions;
+﻿using OrderManagement.Application.Repositories;
 
-namespace OrderManagement.Infrastructure.UnitOfWork.Basic;
+namespace OrderManagement.Application.Common;
 
 /// <summary>
 /// Unit of Work パターンの中核インターフェース
@@ -43,22 +43,5 @@ public interface IUnitOfWork : IDisposable
     /// </summary>
     /// <exception cref="InvalidOperationException">トランザクションが開始されていない場合</exception>
     void Rollback();
-    #endregion
-
-    #region リポジトリ
-    /// <summary>
-    /// 注文リポジトリを取得します
-    /// </summary>
-    IOrderRepository Orders { get; }
-
-    /// <summary>
-    /// 在庫リポジトリを取得します
-    /// </summary>
-    IInventoryRepository Inventory { get; }
-
-    /// <summary>
-    /// 監査ログリポジトリを取得します
-    /// </summary>
-    IAuditLogRepository AuditLogs { get; }
     #endregion
 }

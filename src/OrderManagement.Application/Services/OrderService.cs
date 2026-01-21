@@ -1,8 +1,9 @@
-﻿using OrderManagement.Application.Models;
+﻿using OrderManagement.Application.Common;
+using OrderManagement.Application.Models;
+using OrderManagement.Application.Repositories;
 using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Exceptions;
-using OrderManagement.Infrastructure.UnitOfWork.ActionScope;
 
 namespace OrderManagement.Application.Services;
 
@@ -19,18 +20,24 @@ namespace OrderManagement.Application.Services;
 /// </list>
 /// </remarks>
 /// <param name="uow">Unit of Work（DI経由で注入）</param>
-public class OrderService(IUnitOfWork uow) : IOrderService
+public class OrderService(
+    IUnitOfWork uow,
+    IInventoryRepository inventory,
+    IOrderRepository order,
+    IAuditLogRepository auditLog) : IOrderService
 {
     /// <inheritdoc />
     public async Task<int> CreateOrderAsync(int customerId, List<OrderItem> items)
     {
-        return await uow.CommandAsync(async ctx =>
+        try
         {
+            uow.BeginTransaction();
+
             if (items.Count == 0)
                 throw new BusinessRuleValidationException("Order must have at least one item.");
 
             // 1. 注文集約を構築
-            var order = new Order
+            var orderEntity = new Order
             {
                 CustomerId = customerId,
                 CreatedAt = DateTime.UtcNow
@@ -39,52 +46,58 @@ public class OrderService(IUnitOfWork uow) : IOrderService
             // 2. 各商品の在庫確認と注文明細追加
             foreach (var item in items)
             {
-                var inventory = await ctx.Inventory.GetByProductIdAsync(item.ProductId)
+                var productEntity = await inventory.GetByProductIdAsync(item.ProductId)
                     ?? throw new NotFoundException("Product", item.ProductId.ToString());
 
-                if (inventory.Stock < item.Quantity)
+                if (productEntity.Stock < item.Quantity)
                 {
-                    throw new BusinessRuleViolationException(
-                        $"Insufficient stock for {inventory.ProductName}. " +
-                        $"Available: {inventory.Stock}, Requested: {item.Quantity}");
+                    throw new BusinessRuleValidationException(
+                        $"Insufficient stock for {productEntity.ProductName}. " +
+                        $"Available: {productEntity.Stock}, Requested: {item.Quantity}");
                 }
 
                 // 在庫減算
-                await ctx.Inventory.UpdateStockAsync(
+                await inventory.UpdateStockAsync(
                     item.ProductId,
-                    inventory.Stock - item.Quantity);
+                    productEntity.Stock - item.Quantity);
 
                 // 注文明細を追加（集約ルートを通じて）
-                order.AddDetail(item.ProductId, item.Quantity, inventory.UnitPrice);
+                orderEntity.AddDetail(item.ProductId, item.Quantity, productEntity.UnitPrice);
             }
 
             // 3. 注文を永続化（明細も一緒に保存される）
-            var orderId = await ctx.Orders.CreateAsync(order);
+            var orderId = await order.CreateAsync(orderEntity);
 
             // 4. 監査ログ記録
-            await ctx.AuditLogs.CreateAsync(new AuditLog
+            await auditLog.CreateAsync(new AuditLog
             {
                 Action = "ORDER_CREATED",
                 Details = $"OrderId={orderId}, CustomerId={customerId}, " +
-                         $"Items={items.Count}, Total={order.TotalAmount:C}",
+                    $"Items={items.Count}, Total={orderEntity.TotalAmount:C}",
                 CreatedAt = DateTime.UtcNow
             });
 
+            uow.Commit();
+
             return orderId;
-        });
+        }
+        catch
+        {
+            uow.Rollback();
+            throw;
+        }
     }
 
     /// <inheritdoc />
     public async Task<IEnumerable<Order>> GetAllOrdersAsync()
     {
-        return await uow.QueryAsync(async ctx => await ctx.Orders.GetAllAsync());
+        return await order.GetAllAsync();
     }
 
     /// <inheritdoc />
     public async Task<Order?> GetOrderByIdAsync(int id)
     {
-        var order = await uow.QueryAsync(async ctx => await ctx.Orders.GetByIdAsync(id));
-
-        return order ?? throw new NotFoundException("Order", id.ToString());
+        return await order.GetByIdAsync(id)
+            ?? throw new NotFoundException("Order", id.ToString());
     }
 }

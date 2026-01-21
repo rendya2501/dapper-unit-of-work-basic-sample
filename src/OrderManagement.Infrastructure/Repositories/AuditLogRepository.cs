@@ -1,16 +1,14 @@
 ﻿using Dapper;
+using OrderManagement.Application.Common;
+using OrderManagement.Application.Repositories;
 using OrderManagement.Domain.Entities;
-using OrderManagement.Infrastructure.Repositories.Abstractions;
-using System.Data;
 
 namespace OrderManagement.Infrastructure.Repositories;
 
 /// <summary>
 /// 監査ログリポジトリの実装
 /// </summary>
-/// <param name="connection">データベース接続</param>
-/// <param name="transaction">トランザクション（UnitOfWork から注入）</param>
-public class AuditLogRepository(IDbConnection connection, IDbTransaction? transaction)
+public class AuditLogRepository(IDbSessionAccessor session)
     : IAuditLogRepository
 {
     /// <inheritdoc />
@@ -21,7 +19,7 @@ public class AuditLogRepository(IDbConnection connection, IDbTransaction? transa
             VALUES (@Action, @Details, @CreatedAt)
             """;
 
-        await connection.ExecuteAsync(sql, log, transaction);
+        await session.Connection.ExecuteAsync(sql, log, session.Transaction);
     }
 
     /// <inheritdoc />
@@ -33,7 +31,7 @@ public class AuditLogRepository(IDbConnection connection, IDbTransaction? transa
             LIMIT @Limit
             """;
 
-        return await connection.QueryAsync<AuditLog>(
-            sql, new { Limit = limit }, transaction);
+        return await session.Connection.QueryAsync<AuditLog>(
+            sql, new { Limit = limit }, session.Transaction);
     }
 }

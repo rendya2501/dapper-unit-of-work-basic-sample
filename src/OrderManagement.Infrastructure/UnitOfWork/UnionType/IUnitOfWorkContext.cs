@@ -1,6 +1,6 @@
 ﻿using OrderManagement.Application.Repositories;
 
-namespace OrderManagement.Infrastructure.UnitOfWork.ActionScope;
+namespace OrderManagement.Infrastructure.UnitOfWork.UnionType;
 
 /// <summary>
 /// Unit of Work コンテキスト（Repository へのアクセスを提供）

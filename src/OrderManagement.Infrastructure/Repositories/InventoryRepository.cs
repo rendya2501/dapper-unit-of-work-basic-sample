@@ -1,7 +1,7 @@
 ﻿using Dapper;
+using OrderManagement.Application.Common;
+using OrderManagement.Application.Repositories;
 using OrderManagement.Domain.Entities;
-using OrderManagement.Infrastructure.Repositories.Abstractions;
-using System.Data;
 
 namespace OrderManagement.Infrastructure.Repositories;
 
@@ -11,14 +11,14 @@ namespace OrderManagement.Infrastructure.Repositories;
 /// <remarks>
 /// <para><strong>設計原則</strong></para>
 /// <list type="bullet">
-/// <item>Repository は Connection と Transaction を受け取るが、Begin/Commit/Rollback は一切行わない</item>
+/// <item>Repository は session.Connection と session.Transaction を受け取るが、Begin/Commit/Rollback は一切行わない</item>
 /// <item>トランザクション管理は UnitOfWork が責任を持つ</item>
 /// <item>Repository は純粋にデータアクセスのみに専念</item>
 /// </list>
 /// </remarks>
-/// <param name="connection">データベース接続</param>
-/// <param name="transaction">トランザクション（UnitOfWork から注入）</param>
-public class InventoryRepository(IDbConnection connection, IDbTransaction? transaction)
+/// <param name="session.Connection">データベース接続</param>
+/// <param name="session.Transaction">トランザクション（UnitOfWork から注入）</param>
+public class InventoryRepository(IDbSessionAccessor session)
     : IInventoryRepository
 {
     /// <inheritdoc />
@@ -26,8 +26,8 @@ public class InventoryRepository(IDbConnection connection, IDbTransaction? trans
     {
         const string sql = "SELECT * FROM Inventory WHERE ProductId = @ProductId";
 
-        return await connection.QueryFirstOrDefaultAsync<Inventory>(
-            sql, new { ProductId = productId }, transaction);
+        return await session.Connection.QueryFirstOrDefaultAsync<Inventory>(
+            sql, new { ProductId = productId }, session.Transaction);
     }
 
     /// <inheritdoc />
@@ -35,7 +35,7 @@ public class InventoryRepository(IDbConnection connection, IDbTransaction? trans
     {
         const string sql = "SELECT * FROM Inventory ORDER BY ProductId";
 
-        return await connection.QueryAsync<Inventory>(sql, transaction: transaction);
+        return await session.Connection.QueryAsync<Inventory>(sql, session.Transaction);
     }
 
     /// <inheritdoc />
@@ -46,7 +46,7 @@ public class InventoryRepository(IDbConnection connection, IDbTransaction? trans
             VALUES (@ProductName, @Stock, @UnitPrice);
             SELECT last_insert_rowid();
             """;
-        return await connection.ExecuteScalarAsync<int>(sql, inventory, transaction);
+        return await session.Connection.ExecuteScalarAsync<int>(sql, inventory, session.Transaction);
     }
 
     /// <inheritdoc />
@@ -58,9 +58,9 @@ public class InventoryRepository(IDbConnection connection, IDbTransaction? trans
             WHERE ProductId = @ProductId
             """;
 
-        await connection.ExecuteAsync(sql,
+        await session.Connection.ExecuteAsync(sql,
             new { ProductId = productId, ProductName = productName, Stock = stock, UnitPrice = unitPrice },
-            transaction);
+            session.Transaction);
     }
 
     /// <inheritdoc />
@@ -68,8 +68,8 @@ public class InventoryRepository(IDbConnection connection, IDbTransaction? trans
     {
         const string sql = "UPDATE Inventory SET Stock = @Stock WHERE ProductId = @ProductId";
 
-        return await connection.ExecuteAsync(
-            sql, new { ProductId = productId, Stock = newStock }, transaction);
+        return await session.Connection.ExecuteAsync(
+            sql, new { ProductId = productId, Stock = newStock }, session.Transaction);
     }
 
     /// <inheritdoc />
@@ -77,6 +77,6 @@ public class InventoryRepository(IDbConnection connection, IDbTransaction? trans
     {
         const string sql = "DELETE FROM Inventory WHERE ProductId = @ProductId";
 
-        await connection.ExecuteAsync(sql, new { ProductId = productId }, transaction);
+        await session.Connection.ExecuteAsync(sql, new { ProductId = productId }, session.Transaction);
     }
 }

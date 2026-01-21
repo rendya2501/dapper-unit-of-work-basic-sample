@@ -1,6 +1,6 @@
 ﻿using OrderManagement.Domain.Entities;
 
-namespace OrderManagement.Infrastructure.Repositories.Abstractions;
+namespace OrderManagement.Application.Repositories;
 
 /// <summary>
 /// 注文リポジトリのインターフェース
