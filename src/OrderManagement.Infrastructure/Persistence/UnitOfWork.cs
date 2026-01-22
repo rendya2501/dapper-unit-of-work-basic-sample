@@ -3,7 +3,7 @@ using OrderManagement.Application.Common;
 using System.Data;
 using System.Data.Common;
 
-namespace OrderManagement.Infrastructure.Persistence.UnitOfWork.Basic;
+namespace OrderManagement.Infrastructure.Persistence;
 
 /// <summary>
 /// <see cref="IUnitOfWork"/> の具象実装クラス。
