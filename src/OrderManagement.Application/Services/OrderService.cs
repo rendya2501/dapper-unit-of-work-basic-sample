@@ -34,7 +34,7 @@ public class OrderService(
             await uow.BeginTransactionAsync();
 
             if (items.Count == 0)
-                throw new BusinessRuleValidationException("Order must have at least one item.");
+                throw new BusinessRuleException("Order must have at least one item.");
 
             // 1. 注文集約を構築
             var orderEntity = new Order
@@ -51,7 +51,7 @@ public class OrderService(
 
                 if (productEntity.Stock < item.Quantity)
                 {
-                    throw new BusinessRuleValidationException(
+                    throw new BusinessRuleException(
                         $"Insufficient stock for {productEntity.ProductName}. " +
                         $"Available: {productEntity.Stock}, Requested: {item.Quantity}");
                 }
