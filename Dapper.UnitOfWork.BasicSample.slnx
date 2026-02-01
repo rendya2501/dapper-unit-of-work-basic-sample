@@ -1,6 +1,6 @@
 <Solution>
-  <Project Path="src/OrderManagement.Api/OrderManagement.Api.csproj" />
-  <Project Path="src/OrderManagement.Application/OrderManagement.Application.csproj" />
-  <Project Path="src/OrderManagement.Domain/OrderManagement.Domain.csproj" />
-  <Project Path="src/OrderManagement.Infrastructure/OrderManagement.Infrastructure.csproj" />
+  <Project Path="src/Web.Api/Web.Api.csproj" />
+  <Project Path="src/Application/Application.csproj" />
+  <Project Path="src/Domain/Domain.csproj" />
+  <Project Path="src/Infrastructure/Infrastructure.csproj" />
 </Solution>

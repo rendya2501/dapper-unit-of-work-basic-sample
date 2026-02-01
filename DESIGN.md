@@ -36,7 +36,7 @@
 ### ✅ メリット
 
 | 項目 | 説明 |
-|------|------|
+| ------ | ------ |
 | **明確なトランザクション境界** | `BeginTransaction()`、`Commit()`、`Rollback()` で境界が明確 |
 | **シンプルな実装** | コードが短く、理解しやすい |
 | **デバッグしやすい** | トランザクションの開始・終了が追いやすい |
@@ -47,7 +47,7 @@
 ### ⚠️ デメリット
 
 | 項目 | 説明 |
-|------|------|
+| ------ | ------ |
 | **Rollback 忘れリスク** | `catch` ブロックで `Rollback()` を忘れるとデータ不整合 |
 | **try-catch が必須** | 例外ハンドリングのコードが煩雑 |
 | **コード量が多い** | 同じパターンを何度も書く必要がある |
@@ -146,6 +146,7 @@ public async Task<Order?> GetOrderAsync(int id)
 ```
 
 **ポイント：**
+
 - Read-only 操作ではトランザクション不要
 - Repository に `null` を渡すことでトランザクションなしで実行
 - パフォーマンスが良い
@@ -200,6 +201,7 @@ public class OrderRepository : IOrderRepository
 ```
 
 **重要なポイント：**
+
 - `IDbTransaction?` を nullable にする
 - Dapper は Transaction が `null` の場合、トランザクションなしで実行
 - Read-only では `null` を渡せば軽量に動作
@@ -253,7 +255,7 @@ public class UnitOfWork : IUnitOfWork
 
 ```csharp
 using Microsoft.Data.Sqlite;
-using OrderManagement.Infrastructure.UnitOfWork.Basic;
+using Infrastructure.UnitOfWork.Basic;
 using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -297,6 +299,7 @@ public async Task<Order?> GetOrderAsync(int id)
 ```
 
 **メリット：**
+
 - ✅ トランザクションなし（軽量）
 - ✅ ロックなし
 - ✅ パフォーマンスが良い
@@ -331,6 +334,7 @@ public async Task<int> CreateOrderAsync(int productId, int quantity)
 ```
 
 **ポイント：**
+
 - BeginTransaction 後の Read は同じトランザクション内
 - 自分が書き込んだデータが見える
 - Isolation Level に依存しない
@@ -549,6 +553,7 @@ public async Task<Order?> GetOrderAsync(int id)
 ```
 
 **理由：**
+
 - トランザクションは不要なオーバーヘッド
 - SQLite ではロックが発生する可能性
 - パフォーマンスが悪化
@@ -588,5 +593,6 @@ public async Task<Order?> GetOrderAsync(int id)
 ---
 
 **関連ドキュメント：**
+
 - [Action Scope パターン](../ActionScope/README.md)
 - [パターン比較](../../README.md)
