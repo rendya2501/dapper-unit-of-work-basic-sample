@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Application.Services.Abstractions;
+﻿using Application.Services;
 using Domain.Entities;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Api.Controllers;
 
@@ -9,7 +9,7 @@ namespace Web.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class AuditLogsController(IAuditLogService auditLogService) : ControllerBase
+public class AuditLogsController(AuditLogService auditLogService) : ControllerBase
 {
     /// <summary>
     /// すべての監査ログを取得します

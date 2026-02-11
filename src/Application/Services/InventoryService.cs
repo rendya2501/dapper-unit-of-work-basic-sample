@@ -1,6 +1,5 @@
 ﻿using Application.Common;
 using Application.Repositories;
-using Application.Services.Abstractions;
 using Domain.Entities;
 using Domain.Exceptions;
 
@@ -15,7 +14,7 @@ namespace Application.Services;
 public class InventoryService(
     IUnitOfWork uow,
     IInventoryRepository inventory,
-    IAuditLogRepository auditLog) : IInventoryService
+    IAuditLogRepository auditLog) 
 {
     /// <inheritdoc />
     public async Task<IEnumerable<Inventory>> GetAllAsync()

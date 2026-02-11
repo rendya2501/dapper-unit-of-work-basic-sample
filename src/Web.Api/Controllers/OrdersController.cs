@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Application.Models;
+using Application.Services;
+using Domain.Entities;
+using Microsoft.AspNetCore.Mvc;
 using Web.Api.Contracts.Requests;
 using Web.Api.Contracts.Responses;
-using Application.Models;
-using Application.Services.Abstractions;
-using Domain.Entities;
 
 namespace Web.Api.Controllers;
 
@@ -13,7 +13,7 @@ namespace Web.Api.Controllers;
 /// <param name="orderService">注文サービス</param>
 [ApiController]
 [Route("api/[controller]")]
-public class OrdersController(IOrderService orderService) : ControllerBase
+public class OrdersController(OrderService orderService) : ControllerBase
 {
     /// <summary>
     /// 注文を作成します

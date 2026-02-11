@@ -1,7 +1,6 @@
 ﻿using Application.Common;
 using Application.Models;
 using Application.Repositories;
-using Application.Services.Abstractions;
 using Domain.Entities;
 using Domain.Exceptions;
 
@@ -24,7 +23,7 @@ public class OrderService(
     IUnitOfWork uow,
     IInventoryRepository inventory,
     IOrderRepository order,
-    IAuditLogRepository auditLog) : IOrderService
+    IAuditLogRepository auditLog)
 {
     /// <inheritdoc />
     public async Task<int> CreateOrderAsync(int customerId, List<OrderItem> items)

@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Application.Services;
+using Domain.Entities;
+using Microsoft.AspNetCore.Mvc;
 using Web.Api.Contracts.Requests;
 using Web.Api.Contracts.Responses;
-using Application.Services.Abstractions;
-using Domain.Entities;
 
 namespace Web.Api.Controllers;
 
@@ -11,7 +11,7 @@ namespace Web.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class InventoryController(IInventoryService inventoryService) : ControllerBase
+public class InventoryController(InventoryService inventoryService) : ControllerBase
 {
     /// <summary>
     /// すべての在庫を取得します
