@@ -1,7 +1,7 @@
-﻿using Dapper;
-using Application.Common;
+﻿using Application.Common;
 using Application.Repositories;
-using Domain.Entities;
+using Dapper;
+using Domain.Orders;
 using System.Data;
 
 namespace Infrastructure.Persistence.Repositories;

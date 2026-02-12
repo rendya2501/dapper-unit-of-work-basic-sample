@@ -1,7 +1,8 @@
 ﻿using Application.Common;
 using Application.Repositories;
-using Domain.Entities;
+using Domain.AuditLog;
 using Domain.Exceptions;
+using Domain.Inventory;
 
 namespace Application.Services;
 

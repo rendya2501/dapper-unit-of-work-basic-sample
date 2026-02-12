@@ -1,8 +1,7 @@
 ﻿using Application.Services;
-using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Web.Api.Contracts.Requests;
-using Web.Api.Contracts.Responses;
+using Web.Api.Contracts.Inventory.Requests;
+using Web.Api.Contracts.Inventory.Responses;
 
 namespace Web.Api.Controllers;
 
@@ -17,27 +16,34 @@ public class InventoryController(InventoryService inventoryService) : Controller
     /// すべての在庫を取得します
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<Inventory>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<InventoryResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
         var inventories = await inventoryService.GetAllAsync();
 
-        return Ok(inventories);
+        var result = inventories.Select(i => i.ToResponse());
+
+        return Ok(result);
     }
 
     /// <summary>
     /// 商品IDを指定して在庫を取得します
     /// </summary>
-    [HttpGet("{productId}",Name = "GetByProductId")]
-    [ProducesResponseType(typeof(Inventory), StatusCodes.Status200OK)]
+    [HttpGet("{productId}", Name = "GetByProductId")]
+    [ProducesResponseType(typeof(InventoryResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByProductId(int productId)
     {
         var inventory = await inventoryService.GetByProductIdAsync(productId);
-        if (inventory == null)
-            return NotFound(new { Error = $"Product {productId} not found." });
 
-        return Ok(inventory);
+        if (inventory == null)
+        {
+            return NotFound(new { Error = $"Product {productId} not found." });
+        }
+
+        var result = inventory.ToResponse();
+
+        return Ok(result);
     }
 
     /// <summary>

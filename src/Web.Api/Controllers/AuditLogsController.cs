@@ -1,6 +1,6 @@
 ﻿using Application.Services;
-using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Web.Api.Contracts.AuditLogs.Responses;
 
 namespace Web.Api.Controllers;
 
@@ -17,10 +17,13 @@ public class AuditLogsController(AuditLogService auditLogService) : ControllerBa
     /// <param name="limit">取得件数の上限（デフォルト: 100）</param>
     /// <returns>監査ログのリスト（新しい順）</returns>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<AuditLog>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<AuditLogResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] int limit = 100)
     {
         var logs = await auditLogService.GetAllAsync(limit);
-        return Ok(logs);
+
+        var result = logs.Select(logs => logs.ToResponse());
+
+        return Ok(result);
     }
 }

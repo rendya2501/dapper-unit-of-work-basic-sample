@@ -1,9 +1,8 @@
 ﻿using Application.Models;
 using Application.Services;
-using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Web.Api.Contracts.Requests;
-using Web.Api.Contracts.Responses;
+using Web.Api.Contracts.Orders.Requests;
+using Web.Api.Contracts.Orders.Responses;
 
 namespace Web.Api.Controllers;
 
@@ -47,23 +46,29 @@ public class OrdersController(OrderService orderService) : ControllerBase
     /// すべての注文を取得します
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<Order>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<OrderResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllOrders()
     {
         var orders = await orderService.GetAllOrdersAsync();
-        return Ok(orders);
+
+        var result = orders.Select(o => o.ToResponse());
+
+        return Ok(result);
     }
 
     /// <summary>
     /// IDを指定して注文を取得します
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(Order), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetOrderById(int id)
     {
         // NotFoundException は ProblemDetailsMiddleware が自動変換
         var order = await orderService.GetOrderByIdAsync(id);
-        return Ok(order);
+
+        var result = order!.ToResponse();
+
+        return Ok(result);
     }
 }
