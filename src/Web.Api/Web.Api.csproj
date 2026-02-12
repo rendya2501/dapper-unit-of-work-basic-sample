@@ -18,7 +18,7 @@
     
 	<!-- OpenAPI -->
 	<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.12.37" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.12.38" />
   </ItemGroup>
 
   <ItemGroup>
